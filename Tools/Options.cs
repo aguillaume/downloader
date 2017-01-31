@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace downloader
+namespace Tools
 {
     public class Options
     {
@@ -9,6 +9,7 @@ namespace downloader
         public int Timeout { get; set; } = 10000;
         public int? Start { get; set; } = null;
         public int? End { get; set; } = null;
+        public int MaxAsync { get; set; } = 10;
 
         public Options(string[] args)
         {
@@ -45,11 +46,15 @@ namespace downloader
                         break;
                     case "-s":
                     case "--start":
-                        Start = int.Parse(value)-1;
+                        Start = int.Parse(value) - 1;
                         break;
                     case "-e":
                     case "--end":
                         End = int.Parse(value);
+                        break;
+                    case "-m":
+                    case "--max-async":
+                        MaxAsync = int.Parse(value);
                         break;
                     default:
                         ShowHelp();
@@ -58,6 +63,7 @@ namespace downloader
             }
 
             if (Input == null) throw new Exception("Input filepath is requited");
+            if (Output == null) throw new Exception("Output path is requited");
         }
 
         private void ShowOptions()
@@ -67,6 +73,7 @@ namespace downloader
             Console.WriteLine("Use -t or --timeout to specify the timeout for HTTP requests in seconds. Default is 10s.");
             Console.WriteLine("Use -s or --start to specify the start number of the URLs.");
             Console.WriteLine("Use -e or --end to specify the end number of the URLs.");
+            Console.WriteLine("Use -m or --max-async to specify the number of URLs to be called at the same time.");
         }
 
         private void ShowHelp()

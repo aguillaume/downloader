@@ -2,17 +2,23 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Diagnostics;
+using Tools;
 
 namespace downloader
 {
-    public class Program
+    public class Downlowder
     {
         private static string date = $"{DateTime.Now.Year}-{DateTime.Now.Month}-{DateTime.Now.Day} {DateTime.Now.Hour}.{DateTime.Now.Minute}.{DateTime.Now.Second}";
         private static List<Error> errorList = new List<Error>();
         private static Options options;
+        private static List<string> urls = new List<string>();
 
         public static void Main(string[] args)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             try
             {
                 options = new Options(args);
@@ -20,31 +26,15 @@ namespace downloader
                 Console.WriteLine("===========================================");
                 Console.WriteLine("Welcome to the downloder!");
                 Console.WriteLine($"Reading file from {options.Input}.");
+                GetUrls();
 
-                var urls = new List<string>();
-                using (StreamReader reader = new StreamReader(options.Input))
-                {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        urls.Add(line); // Add to list.
-                    }
-                }
-
-                Console.WriteLine("Grabbed all URLs. Starting call outs.");
-                
                 var start = options.Start == null ? 0 : options.Start.Value;
                 var end = options.End == null ? urls.Count : options.End.Value;
-                for(var count = start; count < end; count++)
+                for (var count = start; count < end; count++)
                 {
-                    Console.WriteLine($"Call #{count+1} starting...");
-                    HttpGet(urls[count], count+1, out bool success);
-                    var message = success ? "ended successfully" : "failed";
-                    Console.WriteLine($"Call #{count+1} {message}");
-                    File.AppendAllLines($"{options.Output}\\log{date}.txt", new List<string> { $"Item number {count+1} {message}" });
-                    count++;
+                    DownloadSync(count);
                 }
-                Console.WriteLine("FINISHED");
+
             }
             catch (Exception ex)
             {
@@ -56,9 +46,32 @@ namespace downloader
                 {
                     File.AppendAllLines($"{options.Output}\\errors-{date}.txt", Error.ToListString(errorList));
                 }
-                Console.WriteLine("Type any key to close...");
+                stopwatch.Stop();
+                Console.WriteLine($"Time Taken: {stopwatch.Elapsed} Type any key to close...");
                 Console.ReadLine();
             }
+        }
+
+        private static void DownloadSync(int count)
+        {
+            Console.WriteLine($"Call #{count + 1} starting...");
+            HttpGet(urls[count], count + 1, out bool success);
+            var message = success ? "ended successfully" : "failed";
+            Console.WriteLine($"Call #{count + 1} {message}");
+            File.AppendAllLines($"{options.Output}\\log{date}.txt", new List<string> { $"Item number {count + 1} {message}" });
+        }
+
+        private static void GetUrls()
+        {
+            using (StreamReader reader = new StreamReader(options.Input))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    urls.Add(line); // Add to list.
+                }
+            }
+            Console.WriteLine("Grabbed all URLs. Starting call outs.");
         }
 
         private static void HttpGet(string url, int count, out bool success)
