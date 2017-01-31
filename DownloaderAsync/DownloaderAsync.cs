@@ -80,7 +80,7 @@ namespace DownloaderAsync
                 }
                 catch (Exception ex)
                 {
-                    //Console.WriteLine($"url #{url.Id} failed, error message: {ex.Message}.");
+                    Console.WriteLine($"url #{url.Id} failed, error message: {ex.Message}.");
                     urlsFail++;
                 }
                 finally
