@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
 using Tools;
 
 namespace DownloaderAsync
@@ -31,20 +30,36 @@ namespace DownloaderAsync
             Console.WriteLine($"Processing file: {_options.Input}.");
             Console.WriteLine($"Output files will be located in: {_options.Output}.");
             Console.WriteLine($"Performing {_options.MaxAsync} API calls at the same time.");
-
-            _urls = UrlExtractor.ExtractUrls(_options.Input).ToList();
+            
             MaxParallel = _options.MaxAsync;
-            _toProcess = new Queue<Url>(UrlExtractor.ExtractUrls(_options.Input));
+
+            var urls = UrlExtractor.ExtractUrls(_options.Input).ToList();
+            var subsetUrls = new List<Url>();
+            foreach(var url in urls)
+            {
+                if((_options.Start != null && url.Id < _options.Start) || 
+                    (_options.End != null && url.Id > _options.End))
+                {
+                    
+                }
+                else
+                {
+                    subsetUrls.Add(url);
+                }
+            }
+            urls = subsetUrls;
+            _toProcess = new Queue<Url>(urls);
+            
             totalUrls = _toProcess.Count;
             Console.WriteLine($"Loaded {totalUrls} URLs for processing.");
             _processing = new Queue<Url>();
+            
             for (int i = 0; i < MaxParallel; i++)
             {
                 if (_toProcess.Count > 0)
                 {
                     var dequeue = _toProcess.Dequeue();
                     _processing.Enqueue(dequeue);
-                    //Console.WriteLine($"Url #{dequeue.Id}, dequeued from _toProcess.");
                 }
                 else
                 {
@@ -61,7 +76,6 @@ namespace DownloaderAsync
             {
                 var url = _processing.Dequeue();
                 GetContent(url);
-                //Console.WriteLine($"url #{url.Id} dequeued from _processing, returned {url.Content}.");
             }
         }
 
@@ -69,6 +83,7 @@ namespace DownloaderAsync
         {
             using (HttpClient client = new HttpClient())
             {
+                client.Timeout = new TimeSpan(0, 0, 0, 0, _options.Timeout);
                 try
                 {
                     Console.WriteLine($"Starting call out to URL #{url.Id}");
@@ -89,7 +104,6 @@ namespace DownloaderAsync
                     {
                         var dequeued = _toProcess.Dequeue();
                         _processing.Enqueue(dequeued);
-                        //Console.WriteLine($"url #{dequeued.Id} dequeued from _toProcess (from get content), returned {dequeued.Content}.");
                         Process();
                     }
                     urlsProcessed++;

@@ -28,7 +28,7 @@ namespace downloader
                 Console.WriteLine($"Reading file from {options.Input}.");
                 GetUrls();
 
-                var start = options.Start == null ? 0 : options.Start.Value;
+                var start = options.Start == null ? 0 : options.Start.Value + 1;
                 var end = options.End == null ? urls.Count : options.End.Value;
                 for (var count = start; count < end; count++)
                 {

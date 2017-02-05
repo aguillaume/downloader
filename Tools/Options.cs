@@ -46,7 +46,7 @@ namespace Tools
                         break;
                     case "-s":
                     case "--start":
-                        Start = int.Parse(value) - 1;
+                        Start = int.Parse(value);
                         break;
                     case "-e":
                     case "--end":
